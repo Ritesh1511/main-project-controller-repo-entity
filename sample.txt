@@ -1,0 +1,151 @@
+Step 1: Spring Boot Application Setup
+Assuming you have already set up the Spring Boot application with the dependencies, application properties, and entity class as described in the previous steps.
+
+Step 2: Create the Post Service
+Create a service interface and its implementation to manage Post entities.
+
+1. Create a service interface in src/main/java/com/springboot/blog/service/PostService.java:
+java
+Copy code
+package com.springboot.blog.service;
+
+import com.springboot.blog.entity.Post;
+import java.util.List;
+
+public interface PostService {
+    Post createPost(Post post);
+    List<Post> getAllPosts();
+    Post getPostById(Long id);
+    Post updatePost(Long id, Post postDetails);
+    void deletePost(Long id);
+}
+2. Create the service implementation in src/main/java/com/springboot/blog/service/PostServiceImpl.java:
+java
+Copy code
+package com.springboot.blog.service;
+
+import com.springboot.blog.entity.Post;
+import com.springboot.blog.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class PostServiceImpl implements PostService {
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Override
+    public Post createPost(Post post) {
+        return postRepository.save(post);
+    }
+
+    @Override
+    public List<Post> getAllPosts() {
+        return postRepository.findAll();
+    }
+
+    @Override
+    public Post getPostById(Long id) {
+        return postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+    }
+
+    @Override
+    public Post updatePost(Long id, Post postDetails) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+        post.setTitle(postDetails.getTitle());
+        post.setDescription(postDetails.getDescription());
+        post.setContent(postDetails.getContent());
+        return postRepository.save(post);
+    }
+
+    @Override
+    public void deletePost(Long id) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Post not found with id " + id));
+        postRepository.delete(post);
+    }
+}
+Step 3: Command Line Runner to Initialize Data
+Use CommandLineRunner only to initialize some data at startup by calling the service layer.
+
+Create PostCommandLineRunner in src/main/java/com/springboot/blog/runner/PostCommandLineRunner.java:
+java
+Copy code
+package com.springboot.blog.runner;
+
+import com.springboot.blog.entity.Post;
+import com.springboot.blog.service.PostService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+@Component
+public class PostCommandLineRunner implements CommandLineRunner {
+
+    @Autowired
+    private PostService postService;
+
+    @Override
+    public void run(String... args) throws Exception {
+        // Create a new Post entity
+        Post post = new Post();
+        post.setTitle("Spring Boot with JPA");
+        post.setDescription("Spring Boot application with JPA integration");
+        post.setContent("This is a simple Spring Boot application demonstrating the use of JPA.");
+
+        // Save the Post entity to the database through the service layer
+        postService.createPost(post);
+
+        // Call the fun() method
+        post.fun();
+    }
+}
+Step 4: Main Application Class
+Keep the main application class simple in src/main/java/com/springboot/blog/SpringBootBlogApplication.java:
+
+java
+Copy code
+package com.springboot.blog;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringBootBlogApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringBootBlogApplication.class, args);
+    }
+}
+Project Structure
+Your project structure should look like this:
+
+css
+Copy code
+springboot-blog-rest-api
+├── pom.xml
+└── src
+    └── main
+        ├── java
+        │   └── com
+        │       └── springboot
+        │           └── blog
+        │               ├── SpringBootBlogApplication.java
+        │               ├── entity
+        │               │   └── Post.java
+        │               ├── repository
+        │               │   └── PostRepository.java
+        │               ├── service
+        │               │   ├── PostService.java
+        │               │   └── PostServiceImpl.java
+        │               └── runner
+        │                   └── PostCommandLineRunner.java
+        └── resources
+            └── application.properties
+Running the Application
+When you run the Spring Boot application, the PostCommandLineRunner will be executed.
+It will create and save a Post entity to the H2 database through the service layer.
+The fun() method will print "scanned master" to the console.
+This structure adheres to the principle of separation of concerns, making your application more modular and easier to maintain.
